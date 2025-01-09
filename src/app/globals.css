@@ -19,3 +19,12 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+input::placeholder{
+  color: #333333;
+}
+input:focus {
+  outline: 1px solid #1d2030;
+}
+button:hover{
+  transition: background-color 0.2s ease-in-out;
+}

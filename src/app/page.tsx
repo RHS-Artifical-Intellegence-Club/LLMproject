@@ -11,7 +11,7 @@ export default function Home() {
   const addTab = () => {
     setTabs((prevTabs) => [
       ...prevTabs,
-      { id: prevTabs.length + 1, name: `Tab ${prevTabs.length + 1}` },
+      { id: prevTabs.length + 1, name: `Project ${prevTabs.length + 1}` },
     ]);
     if (tabs.length === 0) {
       setActiveTabId(1); // automatically select the first tab
@@ -21,7 +21,7 @@ export default function Home() {
   const updateTabName = (id: number, newName: string) => {
     setTabs((prevTabs) =>
       prevTabs.map((tab) =>
-        tab.id === id ? { ...tab, name: newName || `Tab ${tab.id}` } : tab
+        tab.id === id ? { ...tab, name: newName || `Project ${tab.id}` } : tab
       )
     );
   };

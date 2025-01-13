@@ -42,9 +42,9 @@ export default function Home() {
   return (
     <div className="bg-neutral-900 h-screen flex">
       {/* project window */}
-      <div className="flex flex-col w-1/6 bg-neutral-800 rounded-2xl content-center h-full">
+      <div className="flex flex-col w-1/6 bg-neutral-800 content-center h-full">
         <div className="flex items-center justify-between px-4 mt-4">
-          <h1 className="text-3xl text-white">Projects</h1>
+          <h1 className="text-3xl text-white font-serif">Projects</h1>
           <button
             onClick={addTab}
             className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
@@ -82,7 +82,11 @@ export default function Home() {
                 ))}
             </div>
           ) : (
-            <h2 className="text-white text-2xl p-4">No Project Selected</h2>
+            <div className="h-full flex items-center justify-center">
+              <div className="h-1/4 w-1/4 flex items-center justify-center bg-zinc-950 rounded-2xl">
+                <h2 className="text-white text-2xl p-4 font-serif">No Project Selected</h2>
+              </div>
+            </div>
           )}
         </div>
         {/* input box at bottom of the screen */}
@@ -97,7 +101,7 @@ export default function Home() {
             />
             <button
               onClick={sendMessage}
-              className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-serif"
             >
               Send
             </button>

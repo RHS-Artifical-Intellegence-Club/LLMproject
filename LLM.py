@@ -1,9 +1,28 @@
-from transformers import pipeline
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
 
-generator = pipeline("text-generation", model="EleutherAI/gpt-neo-2.7B")
+load_dotenv()
 
-prompt = "Rate chicken 1 to 10"
+api_key1 = os.environ.get("API_KEY")
 
-res = generator(prompt, max_length=100, do_sample=True,temperature=0.9)
 
-print(res)
+client = OpenAI(
+  base_url="https://openrouter.ai/api/v1",
+  api_key=api_key1,
+)
+
+completion = client.chat.completions.create(
+  extra_headers={
+    "HTTP-Referer": "<YOUR_SITE_URL>", 
+    "X-Title": "<YOUR_SITE_NAME>",
+  },
+  model="deepseek/deepseek-r1:free",
+  messages=[
+    {
+      "role": "user",
+      "content": " "
+    }
+  ]
+)
+print(completion.choices[0].message.content)

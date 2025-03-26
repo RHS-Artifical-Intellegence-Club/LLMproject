@@ -1,78 +1,33 @@
 import { NextResponse } from 'next/server';
-import { OpenAI } from 'openai';
+import { generateResponse } from '@/lib/deepseek-service';
 
-// Initialize OpenRouter client
-const client = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    "X-Title": "ClubLLM Chat",
-  }
-});
-
-type ChatMessage = {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-};
-
-// Store conversation history in memory (temporary solution)
-const conversationHistory = new Map<number, ChatMessage[]>();
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
+  console.log("Chat API POST request received");
   try {
-    const { message, tabId } = await request.json();
-
-    if (!message || tabId === undefined) {
-      return NextResponse.json({ error: 'Message and tabId are required' }, { status: 400 });
-    }
-
-    // Get or initialize conversation history for this tab
-    if (!conversationHistory.has(tabId)) {
-      conversationHistory.set(tabId, [
-        {
-          role: "system",
-          content: "You are a helpful AI assistant. Respond directly to the user's questions and maintain context of the conversation."
-        }
-      ]);
-    }
-
-    const history = conversationHistory.get(tabId)!;
+    // Parse request
+    const body = await req.json();
+    console.log("Request body:", JSON.stringify(body));
     
-    // Add user message to history
-    history.push({
-      role: "user",
-      content: message
-    });
-
-    // Create chat completion using OpenRouter with conversation history
-    const completion = await client.chat.completions.create({
-      model: "deepseek/deepseek-r1:free",
-      messages: history
-    });
-
-    // Extract the assistant's response
-    const aiResponse = completion.choices[0].message.content;
+    // Validate input
+    if (!body.message || typeof body.message !== 'string') {
+      console.error("Invalid message format:", body.message);
+      return NextResponse.json({ error: "Invalid message format" }, { status: 400 });
+    }
     
-    if (!aiResponse) {
-      throw new Error('No response from AI');
+    if (!body.chatId || typeof body.chatId !== 'string') {
+      console.error("Invalid chatId:", body.chatId);
+      return NextResponse.json({ error: "Invalid chatId" }, { status: 400 });
     }
 
-    // Add assistant response to history
-    history.push({
-      role: "assistant",
-      content: aiResponse
-    });
-
-    // Update conversation history
-    conversationHistory.set(tabId, history);
-
-    return NextResponse.json({ response: aiResponse });
-
+    // Process the message using DeepSeek
+    const result = await generateResponse(body.message, body.chatId);
+    console.log("Generated response:", result);
+    
+    return NextResponse.json({ result });
   } catch (error) {
-    console.error('Error:', error);
+    console.error("Error in Chat API:", error);
     return NextResponse.json(
-      { error: 'An error occurred processing your request' },
+      { error: `Failed to process message: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     );
   }

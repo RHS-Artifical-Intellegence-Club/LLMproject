@@ -1,91 +1,58 @@
-import { NextResponse } from 'next/server';
-import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from 'next/server';
+import { getChatHistory, saveChat } from '@/lib/chat-service';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/clubllm';
-
-// Define Chat Schema
-const chatSchema = new mongoose.Schema({
-  userId: String,
-  tabId: Number,
-  message: String,
-  response: String,
-  timestamp: { type: Date, default: Date.now }
-});
-
-const Chat = mongoose.models.Chat || mongoose.model('Chat', chatSchema);
-
-// Connect to MongoDB
-let isConnected = false;
-async function dbConnect() {
-  if (isConnected) return;
-
+export async function GET(request: NextRequest) {
   try {
-    await mongoose.connect(MONGODB_URI);
-    isConnected = true;
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-}
+    // Get tab ID from query params
+    const url = new URL(request.url);
+    const tabId = url.searchParams.get('tabId');
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const tabId = searchParams.get('tabId');
-
-    if (!userId || !tabId) {
-      return NextResponse.json({ error: 'Missing userId or tabId' }, { status: 400 });
+    if (!tabId) {
+      return NextResponse.json(
+        { error: 'Tab ID is required' },
+        { status: 400 }
+      );
     }
 
-    await dbConnect();
+    // Get chat history for the tab
+    const history = await getChatHistory(tabId);
 
-    const chats = await Chat.find({ 
-      userId, 
-      tabId: parseInt(tabId) 
-    })
-      .sort({ timestamp: 1 })
-      .exec();
-
-    return NextResponse.json(chats);
-
+    return NextResponse.json({
+      success: true,
+      history
+    });
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Chat history API error:', error);
     return NextResponse.json(
-      { error: 'An error occurred fetching chat history' },
+      { error: 'Failed to get chat history' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId, tabId, message, response } = await request.json();
+    // Parse the request body
+    const { message, response, tabId } = await request.json();
 
-    if (!userId || !tabId || !message || !response) {
+    // Validate required fields
+    if (!message || !response || !tabId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Message, response, and tabId are required' },
         { status: 400 }
       );
     }
 
-    await dbConnect();
+    // Save the chat
+    await saveChat(message, response, tabId);
 
-    const chat = new Chat({
-      userId,
-      tabId,
-      message,
-      response,
-      timestamp: new Date()
+    return NextResponse.json({
+      success: true
     });
-
-    await chat.save();
-    return NextResponse.json(chat);
-
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Save chat history API error:', error);
     return NextResponse.json(
-      { error: 'An error occurred saving the chat' },
+      { error: 'Failed to save chat' },
       { status: 500 }
     );
   }

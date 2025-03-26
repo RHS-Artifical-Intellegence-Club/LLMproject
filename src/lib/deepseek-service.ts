@@ -1,11 +1,11 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 // Constants for OpenRouter configuration
-const OPENROUTER_MODEL = "deepseek/deepseek-chat";
+const MODEL = "deepseek/deepseek-chat";
 const DEFAULT_TEMPERATURE = 0.7;
-const SYSTEM_PROMPT = "You are Pluto, a helpful AI assistant. Be concise, friendly, and informative.";
-// Hard-coded API key
-const OPENROUTER_API_KEY = "key";
+const SYSTEM_PROMPT = "You are ClubLLM, a helpful AI assistant. Be concise, friendly, and informative.";
+// OpenRouter API key
+const OPENROUTER_API_KEY = "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";
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 // In-memory store for chat history by chatId
@@ -37,17 +37,21 @@ export async function generateResponse(message: string, chatId: string): Promise
     history.push({ role: "user", content: message });
     
     // Create OpenRouter client using LangChain's ChatOpenAI with proper authentication
-    const openRouterChat = new ChatOpenAI({
-      modelName: OPENROUTER_MODEL,
+    const chat = new ChatOpenAI({
+      modelName: MODEL,
       temperature: DEFAULT_TEMPERATURE,
       openAIApiKey: OPENROUTER_API_KEY,
       configuration: {
         baseURL: OPENROUTER_BASE_URL,
         defaultHeaders: {
-          "HTTP-Referer": "https://clubllm.com", // Optional, helps with analytics
-          "X-Title": "ClubLLM" // Optional, helps with analytics
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://github.com/RHS-Artifical-Intellegence-Club/LLMproject", // Required by OpenRouter
+          "X-Title": "ClubLLM" // Optional, but good for tracking
         },
       },
+      maxTokens: 1000,
+      streaming: false
     });
     
     // Format messages for the API
@@ -59,7 +63,7 @@ export async function generateResponse(message: string, chatId: string): Promise
     // Call OpenRouter API
     console.log("Sending formatted messages to OpenRouter");
     
-    const response = await openRouterChat.invoke(formattedMessages);
+    const response = await chat.invoke(formattedMessages);
     
     // Extract response content
     const responseContent = typeof response.content === 'string' 

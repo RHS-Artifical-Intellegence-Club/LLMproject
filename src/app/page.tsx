@@ -38,7 +38,7 @@ export default function Home() {
 
   if (!user) {
     // If not authenticated and done loading, redirect to signin
-    router.push('/signin');
+    router.push('/home');
     return null;
   }
 
